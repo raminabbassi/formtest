@@ -1,0 +1,84 @@
+﻿@page "/"
+@inject formtest.Services.CompanyService CompanyService
+@using formtest.Models
+
+<div style="display: flex; justify-content: flex-end; width: 100%;">
+    <div style="max-width: 300px; margin-right: 20px;">
+        <label for="companySelect">Välj Företag</label>
+        <select id="companySelect" @onchange="OnCompanySelected">
+            <option value="">-- Välj ett företag --</option>
+            @foreach (var company in companies)
+            {
+                <option value="@company.Id">@company.Name</option>
+            }
+        </select>
+    </div>
+
+    <div style="max-width: 300px;">
+        <label for="employeeSelect">Välj Anställd</label>
+        <select id="employeeSelect">
+            <option value="">-- Välj en anställd --</option>
+            @foreach (var employee in allEmployees)
+            {
+                <option value="@employee.Id">@employee.FirstName @employee.LastName</option>
+            }
+        </select>
+    </div>
+</div>
+
+@if (selectedEmployee != null)
+{
+    <h4>Vald Anställd</h4>
+    <p>@selectedEmployee.FirstName @selectedEmployee.LastName - @selectedEmployee.Role</p>
+}
+
+@code {
+    private List<Company> companies = new();
+    private List<Employee> allEmployees = new();
+    private Employee? selectedEmployee;
+
+    protected override void OnInitialized()
+    {
+        // Hämta alla företag och registrera händelser
+        companies = CompanyService.GetCompanies();
+        CompanyService.CompaniesChanged += OnCompaniesChanged;
+
+        // Hämta alla anställda initialt
+        allEmployees = CompanyService.GetEmployees();
+        CompanyService.EmployeesChanged += OnEmployeesChanged;
+    }
+
+    private void OnCompanySelected(ChangeEventArgs e)
+    {
+        var selectedCompanyId = int.Parse(e.Value.ToString()!);
+        if (selectedCompanyId > 0)
+        {
+            allEmployees = CompanyService.GetEmployees()
+                .Where(emp => emp.CompanyId == selectedCompanyId)
+                .ToList();
+            StateHasChanged();
+        }
+        else
+        {
+            allEmployees.Clear();
+        }
+    }
+
+    private void OnCompaniesChanged()
+    {
+        companies = CompanyService.GetCompanies();
+        StateHasChanged();
+    }
+
+    private void OnEmployeesChanged()
+    {
+        allEmployees = CompanyService.GetEmployees();
+        StateHasChanged();
+    }
+
+    private void OnEmployeeSelected(ChangeEventArgs e)
+    {
+        var selectedEmployeeId = int.Parse(e.Value.ToString()!);
+        selectedEmployee = allEmployees.FirstOrDefault(emp => emp.Id == selectedEmployeeId);
+    }
+}
