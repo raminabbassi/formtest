@@ -1,12 +1,13 @@
 ﻿@page "/"
 @inject formtest.Services.CompanyService CompanyService
 @using formtest.Models
+@rendermode InteractiveServer
 
 <div style="display: flex; justify-content: flex-end; width: 100%;">
     <div style="max-width: 300px; margin-right: 20px;">
         <label for="companySelect">Välj Företag</label>
-        <select id="companySelect" @onchange="OnCompanySelected">
-            <option value="">-- Välj ett företag --</option>
+        <select @onchange="@(e => EnableEmployeeSelection(e.Value))">
+            <option value="">Välj ett företag</option>
             @foreach (var company in companies)
             {
                 <option value="@company.Id">@company.Name</option>
@@ -14,71 +15,74 @@
         </select>
     </div>
 
-    <div style="max-width: 300px;">
+    <div style="max-width: 300px; margin-right: 20px;">
         <label for="employeeSelect">Välj Anställd</label>
-        <select id="employeeSelect">
-            <option value="">-- Välj en anställd --</option>
-            @foreach (var employee in allEmployees)
+        <select @onchange="@(e => OnEmployeeSelected(e.Value))" disabled="@isEmployeeListDisabled">
+            <option value="">Välj en anställd</option>
+            @foreach (var employee in employees)
             {
-                <option value="@employee.Id">@employee.FirstName @employee.LastName</option>
+                @if (employee.CompanyId == selectedCompanyId)
+                {
+                    <option value="@employee.Id">@employee.FirstName @employee.LastName</option>
+                }
             }
         </select>
     </div>
 </div>
 
-@if (selectedEmployee != null)
-{
-    <h4>Vald Anställd</h4>
-    <p>@selectedEmployee.FirstName @selectedEmployee.LastName - @selectedEmployee.Role</p>
-}
+<div style="margin-top: 0px;">
+    <h4>Anställd detaljer:</h4>
+    <div>
+        <label>Företag:</label>
+        <input type="text" value="@($"{SelectedCompany?.Name ?? ""}")" readonly disabled="@isEmployeeListDisabled" />
+    </div>
+    <div>
+        <label>Namn:</label>
+        <input type="text" value="@($"{SelectedEmployee?.FirstName ?? ""} {SelectedEmployee?.LastName ?? ""}")" readonly disabled="@isEmployeeListDisabled" />
+    </div>
+    <div>
+        <label>Adress:</label>
+        <input type="text" value="@($"{SelectedEmployee?.Address ?? ""}")" readonly disabled="@isEmployeeListDisabled" />
+    </div>
+
+</div>
 
 @code {
     private List<Company> companies = new();
-    private List<Employee> allEmployees = new();
-    private Employee? selectedEmployee;
+    private List<Employee> employees = new();
+    private int? selectedCompanyId;
+    private bool isEmployeeListDisabled = true;
+    private Employee SelectedEmployee;
+    private Company SelectedCompany;
 
     protected override void OnInitialized()
     {
-        // Hämta alla företag och registrera händelser
         companies = CompanyService.GetCompanies();
-        CompanyService.CompaniesChanged += OnCompaniesChanged;
-
-        // Hämta alla anställda initialt
-        allEmployees = CompanyService.GetEmployees();
-        CompanyService.EmployeesChanged += OnEmployeesChanged;
+        employees = CompanyService.GetEmployees();
     }
 
-    private void OnCompanySelected(ChangeEventArgs e)
+    private void EnableEmployeeSelection(object selectedValue)
     {
-        var selectedCompanyId = int.Parse(e.Value.ToString()!);
-        if (selectedCompanyId > 0)
+        if (int.TryParse(selectedValue.ToString(), out int companyId))
         {
-            allEmployees = CompanyService.GetEmployees()
-                .Where(emp => emp.CompanyId == selectedCompanyId)
-                .ToList();
-            StateHasChanged();
+            selectedCompanyId = companyId;
+            SelectedCompany = companies.FirstOrDefault(c => c.Id == companyId);
+            isEmployeeListDisabled = selectedCompanyId <= 0;
         }
         else
         {
-            allEmployees.Clear();
+            isEmployeeListDisabled = true;
         }
-    }
-
-    private void OnCompaniesChanged()
-    {
-        companies = CompanyService.GetCompanies();
+        SelectedEmployee = null; 
         StateHasChanged();
     }
 
-    private void OnEmployeesChanged()
+    private void OnEmployeeSelected(object selectedValue)
     {
-        allEmployees = CompanyService.GetEmployees();
+        if (int.TryParse(selectedValue.ToString(), out int employeeId))
+        {
+            SelectedEmployee = employees.FirstOrDefault(e => e.Id == employeeId);
+        }
         StateHasChanged();
-    }
-
-    private void OnEmployeeSelected(ChangeEventArgs e)
-    {
-        var selectedEmployeeId = int.Parse(e.Value.ToString()!);
-        selectedEmployee = allEmployees.FirstOrDefault(emp => emp.Id == selectedEmployeeId);
     }
 }

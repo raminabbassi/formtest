@@ -14,7 +14,9 @@
       public string LastName { get; set; }
       public string Role { get; set; }
       public int CompanyId { get; set; }
+      public string Address { get; set; } 
+
     }
-    
+
 }
 

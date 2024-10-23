@@ -14,10 +14,10 @@ namespace formtest.Services
 
         private List<Employee> _employees = new List<Employee>
         {
-            new Employee { Id = 1, FirstName = "Oscar", LastName = "Karlsson", Role = "Utvecklare", CompanyId = 1 },
-            new Employee { Id = 2, FirstName = "Anna", LastName = "Svensson", Role = "Designer", CompanyId = 1 },
-            new Employee { Id = 3, FirstName = "Erik", LastName = "Johansson", Role = "Projektledare", CompanyId = 2 },
-            new Employee { Id = 4, FirstName = "Maria", LastName = "Nilsson", Role = "QA Ingenjör", CompanyId = 2 }
+            new Employee { Id = 1, FirstName = "Oscar", LastName = "Karlsson", Role = "Utvecklare", CompanyId = 1, Address = "Storgatan 1, Stockholm" },
+            new Employee { Id = 2, FirstName = "Anna", LastName = "Svensson", Role = "Designer", CompanyId = 1, Address = "Lilla Vägen 2, Stockholm" },
+            new Employee { Id = 3, FirstName = "Erik", LastName = "Johansson", Role = "Projektledare", CompanyId = 2, Address = "Parkvägen 5, Göteborg" },
+            new Employee { Id = 4, FirstName = "Maria", LastName = "Nilsson", Role = "QA Ingenjör", CompanyId = 2, Address = "Kyrkogatan 12, Göteborg" }
         };
 
         public event Action CompaniesChanged;
@@ -25,13 +25,15 @@ namespace formtest.Services
 
         public List<Company> GetCompanies()
         {
+            Console.WriteLine($"Antal företag: {_companies.Count}");
             return _companies;
         }
 
         public List<Employee> GetEmployees()
         {
+            Console.WriteLine($"Antal anställda: {_employees.Count}");
             return _employees;
-        } 
+        }
 
         public void AddCompany(Company company)
         {
@@ -44,6 +46,5 @@ namespace formtest.Services
             _employees.Add(employee);
             EmployeesChanged?.Invoke();
         }
-
     }
 }
